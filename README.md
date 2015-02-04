@@ -1,7 +1,7 @@
 tinycreature (java)
 
-java animation practice
-tiny creatures that move towards food particles
+java animation practice. 
+tiny creatures that move towards food particles. 
 main() in MainActivity.java
 
 -------

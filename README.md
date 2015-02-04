@@ -17,7 +17,8 @@ v.2 (current)
 * aggression
 * speed bursts
 * energy (?)
-* Future Updates:
+
+Future Updates:
 * collision between creatures
 * limited sight range
 * more realistic movement

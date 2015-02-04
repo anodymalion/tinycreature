@@ -5,19 +5,19 @@ tiny creatures that move towards food particles
 main() in MainActivity.java
 
 -------
-* v.0
+v.0
 * perfect sight
 * instant turning
 * no collision between creatures
---
-* v.1
+-------
+v.1
 * delayed turning
---
-* v.2 (current)
+-------
+v.2 (current)
 * aggression
 * speed bursts
 * energy (?)
---
+-------
 * Future Updates:
 * collision between creatures
 * limited sight range

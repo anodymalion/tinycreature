@@ -9,8 +9,10 @@ v.0
 * perfect sight
 * instant turning
 * no collision between creatures
+
 v.1
 * delayed turning
+
 v.2 (current)
 * aggression
 * speed bursts

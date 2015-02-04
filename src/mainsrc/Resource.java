@@ -5,11 +5,11 @@ import java.util.ArrayList;
 
 public class Resource {
 	public int x, y, resSize = 10;
-	public ArrayList<Creature> seekers;
+	public ArrayList<Creature> seekers = new ArrayList<Creature>();
 	
 	public Resource(){
 		initializeG();
-		ArrayList<Creature> seekers = new ArrayList<Creature>();
+		//ArrayList<Creature> seekers = new ArrayList<Creature>();
 	}
 	private void initializeG(){
 		Random rand = new Random();

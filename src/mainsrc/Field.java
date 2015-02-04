@@ -51,9 +51,10 @@ public class Field extends JPanel implements Runnable{
 	//image info
 	private Image creature;
 	private Image resource;
+	private Image cboost;
 	
 	//resource info
-	public int numRes = 8;
+	public int numRes = 10;
 	public int resSize = 10;
 	ArrayList<Resource> resList = new ArrayList<Resource>();
 	
@@ -70,6 +71,9 @@ public class Field extends JPanel implements Runnable{
 		
 		ImageIcon iir = new ImageIcon(this.getClass().getResource("resource.png"));
 		resource = iir.getImage();
+		
+		ImageIcon iib = new ImageIcon(this.getClass().getResource("creature-boost.png"));
+		cboost = iib.getImage();
 		
 		setBackground(Color.white);
 		setFocusable(true);
@@ -129,15 +133,18 @@ public class Field extends JPanel implements Runnable{
 			Creature thisC = crList.get(i);
 			int indx = thisC.target;
 			if(indx == -1){
-				//Random rand = new Random();
-				//thisC.target = rand.nextInt(numberRes);
 				thisC.target = calcClosest(thisC);
+				resList.get(thisC.target).seekers.add(thisC);
 				continue;
 			}
 			Resource thisR = resList.get(indx);
 			if(thisR.x-resSize/2 <= thisC.x+creatSize/2 && thisC.x <= thisR.x+resSize/2 &&
 					thisR.y-resSize/2 <= thisC.y && thisC.y <= thisR.y+resSize/2){
-				thisC.foodpt++;
+				//thisC.foodpt++; //if keeping track of # food eaten
+				thisC.energy += 9;
+				if(thisC.energy > thisC.maxenergy)
+					thisC.energy = thisC.maxenergy;
+				
 				Resource newres = new Resource();
 				resList.set(indx, newres);
 				for(int j = 0; j < crList.size(); ++j){
@@ -152,7 +159,10 @@ public class Field extends JPanel implements Runnable{
 		//part 0 - assume it has perfect sight and instant turning
 		Graphics2D g2d = (Graphics2D) g;
 		g2d.rotate(Math.toRadians(cr.angle), cr.x+creatSize/2, cr.y);
-		g2d.drawImage(creature, cr.x, cr.y, this);
+		if(cr.boost)
+			g2d.drawImage(cboost, cr.x, cr.y, this);
+		else
+			g2d.drawImage(creature, cr.x, cr.y, this);
 		g2d.rotate(0-Math.toRadians(cr.angle), cr.x+creatSize/2, cr.y);
 	}
 	
@@ -161,12 +171,44 @@ public class Field extends JPanel implements Runnable{
 	}
 	
 	private void cycle(){
-		double desired, xtemp, ytemp, speed;
+		double desired, xtemp, ytemp, speed, factor;
 		for(int i = 0; i < crList.size(); ++i){
 			Creature thisC = crList.get(i);
-			if(thisC.target == -1){
+			
+			if(thisC.target == -1){ //get target if creature has none
 				thisC.target = calcClosest(thisC);
+				resList.get(thisC.target).seekers.add(thisC);
+				//resList.get(thisC.target);
 			}
+			
+			
+			if(resList.get(thisC.target).numSeekers() > 1 && !thisC.boost 
+					&& thisC.energy >= 6 && !thisC.cool){ //start boost
+				//System.out.println("BOOST");
+				thisC.boost = true;
+				//thisC.energy -= 20;
+				thisC.starttime = System.currentTimeMillis();
+			}
+			else if(thisC.cool && ((System.currentTimeMillis() - thisC.coolstart) > thisC.cooldown || thisC.energy == 0)){
+				thisC.cool = false;
+				//System.out.println("COOLDOWN ENDED");
+			}
+			
+			if(thisC.boost && (System.currentTimeMillis() - thisC.starttime) < thisC.timeboost){
+				factor = 1.5;
+			}
+			else if(thisC.boost && !thisC.cool){
+				//System.out.println("COOLDOWN");
+				thisC.coolstart = System.currentTimeMillis();
+				thisC.cool = true;
+				thisC.boost = false;
+				factor = 1;
+			}
+			else{
+				factor = 1;
+			}
+			
+			//calculate next position on field
 			desired = (180 - Math.toDegrees(calcAngle(thisC, resList.get(thisC.target))))%360;
 			//System.out.println(desired + "   " + thisC.angle + " -- " + Math.abs(desired - thisC.angle));
 			double diff = (desired - thisC.angle)%360;
@@ -177,17 +219,17 @@ public class Field extends JPanel implements Runnable{
 			}
 			else if(diff < 180 && diff > 0 || diff < -180){
 				thisC.angle = (int)(thisC.angle + thisC.turnspeed)%360;
-				diff = thisC.turnspeed;
+				diff = thisC.turnspeed * factor;
 			}
 			else{
 				thisC.angle = (int)(thisC.angle - thisC.turnspeed)%360;
-				diff = 0 - thisC.turnspeed;
+				diff = 0 - thisC.turnspeed * factor;
 			}
 			
 			if(Math.abs(diff2) < 20 || Math.abs(diff2) > 340)
-				speed = thisC.speed; //can erase later
+				speed = thisC.speed * factor; //can erase later
 			else if(Math.abs(diff2) < 45 || Math.abs(diff2) > 315)
-				speed = (thisC.speed / 2) + 1;
+				speed = (thisC.speed / 2) * factor + 1;
 			else
 				speed = 0;
 				
@@ -195,13 +237,8 @@ public class Field extends JPanel implements Runnable{
 			double hypot = Math.hypot(thisC.vector[0], thisC.vector[1]);			
 			xtemp = (thisC.vector[0] / hypot) * speed;
 			ytemp = (thisC.vector[1] / hypot) * speed;
-			
-			//xtemp = Math.sin(Math.toRadians(desired))*thisC.speed;
-			//ytemp = Math.cos(Math.toRadians(desired))*thisC.speed;
-			
 			thisC.x += xtemp;
 			thisC.y += ytemp;
-			//System.out.println(thisC.x + " ; " + thisC.y);
 		}	
 	}
 	
@@ -242,6 +279,7 @@ public class Field extends JPanel implements Runnable{
 		//System.out.println(cr.vector[0] + ", " + cr.vector[1]);
 	}
 	
+	//alternate method for calculating movement vector - simply move toward closest food
 	private void calcVector2(Creature cr, Resource res, double diff){
 		double b2 = (res.y-cr.y);
 		double b3 = (res.x-cr.x-(creatSize)/2);
@@ -249,6 +287,7 @@ public class Field extends JPanel implements Runnable{
 		cr.vector[1] = b2;
 	}
 	
+	//calculate the closest resource to cr
 	private int calcClosest(Creature cr){
 		int closest = 0;
 		double distance = Math.hypot((double)Field.WIDTH, (double)Field.HEIGHT);
@@ -265,13 +304,15 @@ public class Field extends JPanel implements Runnable{
 	}
 	
 	public void run(){
-		long initTime, timeDiff, sleep;
+		long initTime, newTime, energyTime, timeDiff, energyDiff, sleep;
 		initTime = System.currentTimeMillis();
+		energyTime = initTime;
 		while(true){
 			cycle();
 			checkRes();
 			repaint();
 			timeDiff = System.currentTimeMillis() - initTime;
+			energyDiff = System.currentTimeMillis() - energyTime; 
 			sleep = DELAY - timeDiff;
 			if(sleep < 0){
 				sleep = 2;
@@ -282,6 +323,24 @@ public class Field extends JPanel implements Runnable{
 				System.out.println("Interrupted " + e.getMessage());
 			}
 			initTime = System.currentTimeMillis();
+			if(energyDiff >= 500){
+				for(int i = 0; i < crList.size(); ++i){
+					int eng = crList.get(i).energy;
+					if(eng > 0 && !crList.get(i).boost)
+						crList.get(i).energy = eng; //-1
+					else if(crList.get(i).boost){
+						if(eng > 4)
+							crList.get(i).energy = eng - 1;
+						else
+							crList.get(i).energy = 0;
+					}
+					else{
+						crList.get(i).energy = 0;
+					}
+					//System.out.println(i + "  " + eng + " --> " + crList.get(i).energy);
+				}
+				energyTime = System.currentTimeMillis();
+			}
 		}
 	}
 }

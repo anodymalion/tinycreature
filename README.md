@@ -23,4 +23,4 @@ Future Updates:
 * limited sight range
 * more realistic movement
 
-.jar file for v.2.1
+.jar file for v.2.1 - currently doesn't include images, must be in same folder as /images to run properly!

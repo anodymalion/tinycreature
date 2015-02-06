@@ -20,24 +20,19 @@ package mainsrc;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
-import javax.swing.Timer;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.Toolkit;
+//import java.awt.Toolkit;
 import java.awt.Image;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Font;
-import java.lang.Math.*;
 
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.Vector;
 
+import java.net.URL;
+
+@SuppressWarnings("serial")
 public class Field extends JPanel implements Runnable{
 	
 	//field info
@@ -62,17 +57,33 @@ public class Field extends JPanel implements Runnable{
 	public int numCr = 5;
 	public int creatSize = 36;
 	ArrayList<Creature> crList = new ArrayList<Creature>();
-	int fontsize = 10;
-	Font font = new Font("Helvetica", Font.PLAIN, fontsize);
 	
 	public Field(){
-		ImageIcon iic = new ImageIcon(this.getClass().getResource("creature-default.png"));
+		
+		//USE THESE for running code
+		URL urlc = this.getClass().getResource("images/creature-default.png");
+		URL urlr = this.getClass().getResource("images/resource.png");
+		URL urlb = this.getClass().getResource("images/creature-boost.png");
+		
+		//USE THESE for exporting .jar file
+		//URL urlc = this.getClass().getResource("/images/creature-default.png");
+		//URL urlr = this.getClass().getResource("/images/resource.png");
+		//URL urlb = this.getClass().getResource("/images/creature-boost.png");
+		
+		//creature = this.getToolkit().getImage(urlc); 
+		//"images/..."
+		ImageIcon iic = new ImageIcon(urlc);
 		creature = iic.getImage();
 		
-		ImageIcon iir = new ImageIcon(this.getClass().getResource("resource.png"));
+		//resource = this.getToolkit().getImage(urlr);
+		//ImageIcon iir = new ImageIcon(MainFunction.class.getResource("resource.png"));
+		ImageIcon iir = new ImageIcon(urlr);
 		resource = iir.getImage();
 		
-		ImageIcon iib = new ImageIcon(this.getClass().getResource("creature-boost.png"));
+		//cboost = this.getToolkit().getImage(urlb);
+		//this.getClass().getResource
+		//ImageIcon iib = new ImageIcon(MainFunction.class.getResource("creature-boost.png"));
+		ImageIcon iib = new ImageIcon(urlb);
 		cboost = iib.getImage();
 		
 		setBackground(Color.white);
@@ -99,21 +110,13 @@ public class Field extends JPanel implements Runnable{
 	
 	public void paintComponent(Graphics g){
 		super.paintComponent(g);
-		int drawX = 10;
-		int drawY = this.HEIGHT - (fontsize + 10);
-		int segLeg = (this.WIDTH - 10)/crList.size();
-		
-		g.setFont(new Font("Helvetica", Font.PLAIN, fontsize));
+
 		g.setColor(Color.BLACK);
 		for(int i = 0; i < resList.size(); ++i){
 			drawRes(g, resList.get(i));
 		}
 		for(int i = 0; i < crList.size(); ++i){
 			drawCreature(g, crList.get(i));
-			//String s = "%" + crList.get(i).foodpt;
-			//System.out.println(s);
-			//g.drawString(s, drawX, drawY);
-			drawX += segLeg;
 		}
 		g.dispose();
 	}
@@ -191,14 +194,13 @@ public class Field extends JPanel implements Runnable{
 			}
 			else if(thisC.cool && ((System.currentTimeMillis() - thisC.coolstart) > thisC.cooldown || thisC.energy == 0)){
 				thisC.cool = false;
-				//System.out.println("COOLDOWN ENDED");
 			}
 			
 			if(thisC.boost && (System.currentTimeMillis() - thisC.starttime) < thisC.timeboost){
-				factor = 1.5;
+				Random rand = new Random();
+				factor = 1.2 + rand.nextDouble();
 			}
 			else if(thisC.boost && !thisC.cool){
-				//System.out.println("COOLDOWN");
 				thisC.coolstart = System.currentTimeMillis();
 				thisC.cool = true;
 				thisC.boost = false;
@@ -210,12 +212,10 @@ public class Field extends JPanel implements Runnable{
 			
 			//calculate next position on field
 			desired = (180 - Math.toDegrees(calcAngle(thisC, resList.get(thisC.target))))%360;
-			//System.out.println(desired + "   " + thisC.angle + " -- " + Math.abs(desired - thisC.angle));
 			double diff = (desired - thisC.angle)%360;
 			double diff2 = diff;
 			if(Math.abs(diff) <= thisC.turnspeed + 1){
 				thisC.angle = (int)desired % 360;
-				//calcVector2(thisC, resList.get(thisC.target), diff);
 			}
 			else if(diff < 180 && diff > 0 || diff < -180){
 				thisC.angle = (int)(thisC.angle + thisC.turnspeed)%360;
@@ -275,17 +275,15 @@ public class Field extends JPanel implements Runnable{
 				cr.vector[1] = 0 - Math.abs(cr.vector[1]);
 			}
 		}
-		//System.out.println(angle);
-		//System.out.println(cr.vector[0] + ", " + cr.vector[1]);
 	}
 	
 	//alternate method for calculating movement vector - simply move toward closest food
-	private void calcVector2(Creature cr, Resource res, double diff){
+	/*private void calcVector2(Creature cr, Resource res, double diff){
 		double b2 = (res.y-cr.y);
 		double b3 = (res.x-cr.x-(creatSize)/2);
 		cr.vector[0] = b3;
 		cr.vector[1] = b2;
-	}
+	}*/
 	
 	//calculate the closest resource to cr
 	private int calcClosest(Creature cr){
@@ -304,7 +302,7 @@ public class Field extends JPanel implements Runnable{
 	}
 	
 	public void run(){
-		long initTime, newTime, energyTime, timeDiff, energyDiff, sleep;
+		long initTime, energyTime, timeDiff, energyDiff, sleep;
 		initTime = System.currentTimeMillis();
 		energyTime = initTime;
 		while(true){
@@ -327,17 +325,16 @@ public class Field extends JPanel implements Runnable{
 				for(int i = 0; i < crList.size(); ++i){
 					int eng = crList.get(i).energy;
 					if(eng > 0 && !crList.get(i).boost)
-						crList.get(i).energy = eng; //-1
+						crList.get(i).energy = eng - 1; //-1
 					else if(crList.get(i).boost){
 						if(eng > 4)
-							crList.get(i).energy = eng - 1;
+							crList.get(i).energy = eng - 2;
 						else
 							crList.get(i).energy = 0;
 					}
 					else{
 						crList.get(i).energy = 0;
 					}
-					//System.out.println(i + "  " + eng + " --> " + crList.get(i).energy);
 				}
 				energyTime = System.currentTimeMillis();
 			}

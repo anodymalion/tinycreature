@@ -22,3 +22,5 @@ Future Updates:
 * collision between creatures
 * limited sight range
 * more realistic movement
+
+.jar file for v.2.1

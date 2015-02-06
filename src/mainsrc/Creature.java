@@ -11,8 +11,6 @@ public class Creature {
 	public boolean boost, cool;
 	
 	public Creature(){
-		int x, y;
-		double speed;
 		initializeC();
 	}
 	public void initializeC(){
@@ -27,9 +25,9 @@ public class Creature {
 		vector[1] = -1;
 		boost = false;
 		cool = false;
-		timeboost = 2000;
+		timeboost = rand.nextInt(1000) + 1700;
 		starttime = 0;
-		cooldown = 5000;
+		cooldown = rand.nextInt(1000) + 4000;
 		coolstart = 0;
 		maxenergy = rand.nextInt(10) + 50;
 		energy = maxenergy;

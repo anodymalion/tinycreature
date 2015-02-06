@@ -1,8 +1,10 @@
 package mainsrc;
 
 import javax.swing.JFrame;
+
 import java.util.ArrayList;
 
+@SuppressWarnings("serial")
 public class MainFunction extends JFrame{
 
 	public static final int WIDTH = 800;
@@ -20,7 +22,7 @@ public class MainFunction extends JFrame{
 	}
 	
 	public static void main(String[] args) {
-		MainFunction mf = new MainFunction();
+		new MainFunction();
 		return;
 	}
 }
